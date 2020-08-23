@@ -40,4 +40,50 @@ app.post('/createdb', (req, res) => {
 app.post('/new_contact', (req, res) => {
     var name = req.body.name;
     var phone = req.body.phone;
-})
+
+    db.insert({name:name, phone:phone, crazy:true }, phone, (err, body, header) => { 
+        if (err) {
+            res.send("Error creating contacts");
+            return;
+        }
+
+        res.send('Contact created successfully');
+
+     })
+});
+
+app.post('/view_contact', (req, res) => {
+    var alldoc = "Following are the contacts"
+    db.get(req.body.phone, {revs_info:true}, (err, body) => {
+        if (!err) {
+            console.log(body);
+        }
+
+        if (body) {
+            alldoc += `name: ${body.name} <br/> Phone Number: ${body.phone} <br/>`;
+        }
+        else {
+            alldoc = 'No record found';
+        }
+        res.send(alldoc);
+    });
+});
+
+app.post('/delete_contact', (req, res) => {
+    db.get(req.body.phone, {revs_info: true}, (err, body) => {
+        if(!err) {
+            db.destroy(req.body.phone, body._rev, (err, body) => {
+                if(err) {
+                    res.send('error deleting contact');
+                    return;
+                }
+
+                res.send('Contact deleted successfully'); 
+            });
+        }
+    });
+});
+
+http.createServer(app).listen(app.get('port'), () => {
+    console.log('Express server listening on Port ' + app.get('port'));
+});
